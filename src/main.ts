@@ -22,14 +22,14 @@ async function run() {
     }
 
     // Get client and context
-    const client: github.GitHub = new github.GitHub(
+    const client = github.getOctokit(
       core.getInput('repo-token', {required: true})
     );
     const context = github.context;
     const payload = context.payload;
 
-    if (payload.action !== 'opened') {
-      core.debug('No issue or PR was opened, skipping');
+    if (payload.action !== 'opened' && payload.action !== 'edited') {
+      core.debug('No issue or PR was opened or edited, skipping');
       return;
     }
 
@@ -81,21 +81,21 @@ async function run() {
     // Add a comment to the appropriate place
     core.debug(`Adding message: ${message} to ${issueType} ${issue.number}`);
     if (isIssue) {
-      await client.issues.createComment({
+      await client.rest.issues.createComment({
         owner: issue.owner,
         repo: issue.repo,
         issue_number: issue.number,
         body: message
       });
       core.debug('Closing issue');
-      await client.issues.update({
+      await client.rest.issues.update({
         owner: issue.owner,
         repo: issue.repo,
         issue_number: issue.number,
         state: 'closed'
       });
     } else {
-      await client.pulls.createReview({
+      await client.rest.pulls.createReview({
         owner: issue.owner,
         repo: issue.repo,
         pull_number: issue.number,
@@ -103,7 +103,7 @@ async function run() {
         event: 'COMMENT'
       });
       core.debug('Closing PR');
-      await client.pulls.update({
+      await client.rest.pulls.update({
         owner: issue.owner,
         repo: issue.repo,
         pull_number: issue.number,
@@ -111,7 +111,11 @@ async function run() {
       });
     }
   } catch (error) {
-    core.setFailed(error.message);
+    if (error instanceof Error) {
+      core.setFailed(error.message);
+    } else {
+      core.setFailed(String(error));
+    }
     return;
   }
 }
