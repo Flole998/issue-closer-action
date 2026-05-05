@@ -29977,6 +29977,17 @@ function run() {
         try {
             const issueCloseMessage = core.getInput('issue-close-message');
             const prCloseMessage = core.getInput('pr-close-message');
+            const issueCloseReasonInput = core.getInput('issue-close-reason');
+            let issueCloseReason;
+            if (issueCloseReasonInput === 'completed') {
+                issueCloseReason = 'completed';
+            }
+            else {
+                if (issueCloseReasonInput && issueCloseReasonInput !== 'not_planned') {
+                    core.warning(`Invalid issue-close-reason "${issueCloseReasonInput}", defaulting to "not_planned". Valid values are "not_planned" or "completed".`);
+                }
+                issueCloseReason = 'not_planned';
+            }
             if (!issueCloseMessage && !prCloseMessage) {
                 throw new Error('Action must have at least one of issue-close-message or pr-close-message set');
             }
@@ -30041,7 +30052,8 @@ function run() {
                     owner: issue.owner,
                     repo: issue.repo,
                     issue_number: issue.number,
-                    state: 'closed'
+                    state: 'closed',
+                    state_reason: issueCloseReason
                 });
             }
             else {

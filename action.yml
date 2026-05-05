@@ -13,6 +13,9 @@ inputs:
     description: Message content to comment on the pull request before closing
   pr-pattern:
     description: Regular expression pattern which the pull request body must match otherwise it's closed
+  issue-close-reason:
+    description: Reason for closing the issue (not_planned or completed)
+    default: not_planned
   repo-token:
     description: GitHub token
 runs:

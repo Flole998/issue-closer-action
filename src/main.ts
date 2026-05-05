@@ -5,6 +5,18 @@ async function run() {
   try {
     const issueCloseMessage: string = core.getInput('issue-close-message');
     const prCloseMessage: string = core.getInput('pr-close-message');
+    const issueCloseReasonInput: string = core.getInput('issue-close-reason');
+    let issueCloseReason: 'not_planned' | 'completed';
+    if (issueCloseReasonInput === 'completed') {
+      issueCloseReason = 'completed';
+    } else {
+      if (issueCloseReasonInput && issueCloseReasonInput !== 'not_planned') {
+        core.warning(
+          `Invalid issue-close-reason "${issueCloseReasonInput}", defaulting to "not_planned". Valid values are "not_planned" or "completed".`
+        );
+      }
+      issueCloseReason = 'not_planned';
+    }
 
     if (!issueCloseMessage && !prCloseMessage) {
       throw new Error(
@@ -92,7 +104,8 @@ async function run() {
         owner: issue.owner,
         repo: issue.repo,
         issue_number: issue.number,
-        state: 'closed'
+        state: 'closed',
+        state_reason: issueCloseReason
       });
     } else {
       await client.rest.pulls.createReview({
